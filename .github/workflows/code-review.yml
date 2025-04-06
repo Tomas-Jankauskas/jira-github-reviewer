@@ -1,0 +1,41 @@
+name: JIRA Coding Standards Review
+
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  review-code:
+    # Only run when the "needs-review" label is added
+    if: github.event.label.name == 'needs-review'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history for all branches and tags
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install aiohttp sentence-transformers scikit-learn numpy
+      
+      - name: Fetch JIRA guidelines and review PR
+        env:
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_URL: ${{ secrets.JIRA_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_KEY: ${{ vars.JIRA_PROJECT_KEY }}
+          GUIDELINES_PAGE_ID: ${{ vars.JIRA_GUIDELINES_PAGE_ID }}
+          # Add direct URL to guidelines if needed
+          GUIDELINES_DIRECT_URL: ${{ vars.GUIDELINES_DIRECT_URL }}
+        run: |
+          # Run the review script directly
+          python .github/scripts/review_pr.py 
